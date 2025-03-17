@@ -1,0 +1,23 @@
+/* Student-specific styles */
+.student-layout {
+    background-color: #f8f9fa;
+}
+
+.sidebar {
+    background-color: #ffffff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.sidebar .nav-link {
+    color: #6c757d;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #f1f3f5;
+}
+
+.sidebar .nav-link.active {
+    background-color: #e9ecef;
+    color: #007bff;
+    font-weight: bold;
+}
