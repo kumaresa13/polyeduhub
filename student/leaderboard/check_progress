@@ -1,0 +1,70 @@
+<?php
+
+
+// Include required files
+require_once '../../includes/config.php';
+require_once '../../includes/db-connection.php';
+require_once '../../includes/functions.php';
+
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Default response
+$response = [
+    'success' => false,
+    'current_level' => 1,
+    'next_level' => 2,
+    'points' => 0,
+    'formatted_points' => '0',
+    'progress_percentage' => 0,
+    'points_remaining' => 100
+];
+
+// Check if user is logged in
+if (isset($_SESSION['id'])) {
+    $user_id = $_SESSION['id'];
+    
+    try {
+        $pdo = getDbConnection();
+        
+        // Get user's points and level
+        $stmt = $pdo->prepare("SELECT points, level FROM user_points WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $user_stats = $stmt->fetch();
+        
+        if ($user_stats) {
+            // Calculate progress
+            $current_level = $user_stats['level'];
+            $next_level = $current_level + 1;
+            $points = $user_stats['points'];
+            
+            $points_for_current_level = pow($current_level, 2) * 100;
+            $points_for_next_level = pow($next_level, 2) * 100;
+            $points_needed = $points_for_next_level - $points_for_current_level;
+            $current_progress = $points - $points_for_current_level;
+            $points_remaining = max(0, $points_needed - $current_progress);
+            $progress_percentage = min(100, ($current_progress / $points_needed) * 100);
+            
+            // Update response
+            $response = [
+                'success' => true,
+                'current_level' => $current_level,
+                'next_level' => $next_level,
+                'points' => $points,
+                'formatted_points' => number_format($points),
+                'progress_percentage' => round($progress_percentage),
+                'points_remaining' => number_format($points_remaining)
+            ];
+        }
+    } catch (Exception $e) {
+        // Keep default response on error
+        error_log("Error in check_progress.php: " . $e->getMessage());
+    }
+}
+
+// Return JSON response
+header('Content-Type: application/json');
+echo json_encode($response);
+exit;
